@@ -1,5 +1,5 @@
 import unittest
-from tsp import Tsp
+from tsp_panda import Tsp
 
 
 class TestTsp(unittest.TestCase):
@@ -7,18 +7,18 @@ class TestTsp(unittest.TestCase):
     def test_simple_tsp(self):
 
         trucks = {
-            0:{'truck': 'A', 'lat': 1.0, 'long': 1.0},
-            1:{'truck': 'B', 'lat': 35.0, 'long': 35.0}
+            0:{'truck': 'A', 'lat': 0.0, 'long': 0.0},
+            1:{'truck': 'B', 'lat': -10.0, 'long': -10.0}
         }
 
         cargos = {
             0:{'product': 'Things', 'origin_lng': -10.0, 'origin_lat': -10.0, 'destination_lng': -20.0, 'destination_lat': -20.0},
-            0:{'product': 'Phones', 'origin_lng': 40.0, 'origin_lat': 40.0, 'destination_lng': 60.0, 'destination_lat': 60.0},
+            1:{'product': 'Phones', 'origin_lng': 0.0, 'origin_lat': 0.0, 'destination_lng': 80.0, 'destination_lat': 80.0},
         }
 
         result = {
-            0:{'truck': 'A', 'cargo': 'Things'},
-            1:{'truck': 'B', 'cargo': 'Phones'},
+            0:{'truck': 'B', 'cargo': 'Things'},
+            1:{'truck': 'A', 'cargo': 'Phones'},
         }
         tsp = Tsp()
         self.assertEqual(tsp.calculateBestPairTrucksCargos(trucks, cargos), result)

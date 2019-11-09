@@ -1,10 +1,28 @@
 import csv
+import mlrose
+import numpy as np
+from math import sin, cos, sqrt, atan2, radians
+
 
 _TRUCKS_FILE = 'trucks.csv'
 _CARGOS_FILE = 'cargo.csv'
 
 
 class Tsp:
+
+    def calculateDistanceInKmFromLatsLongs(self, lat1, lon1, lat2, lon2):
+        # approximate radius of earth in km
+        R = 6356.0
+
+        dlon = lon2 - lon1
+        dlat = lat2 - lat1
+
+        a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+        distance = R * c
+
+        return distance
 
     def getTrucks(self):
         trucks = {}
@@ -20,7 +38,10 @@ class Tsp:
                     truck['state'] = rows[2]
                     truck['lat'] = float(rows[3])
                     truck['long'] = float(rows[4])
+                    truck['nearest_cargo'] = None
+                    truck['nearest_dist'] = None
                     trucks[count-1] = truck
+                    
                 count+=1
         return trucks
 
@@ -32,7 +53,6 @@ class Tsp:
             count = 0
             for rows in reader:
                 if(count>0): 
-                                                
                     cargo = {}
                     cargo['product'] = rows[0]
                     cargo['origin_city'] = rows[1]
@@ -48,12 +68,36 @@ class Tsp:
         return cargos
         
     def calculateBestPairTrucksCargos(self, trucks, cargos):
+        return tsp.distanceList(trucks, cargos)
+    
+    def distanceList(self, trucks, cargos):
+        dist_list = []
+        final = {}
+        for key, cargo in cargos.items():
+            final[key] = {'truck': None, 'cargo': cargo['product'], 'distance': None}
+            for key2, truck in trucks.items():
+                distance = self.calculateDistanceInKmFromLatsLongs(truck['lat'], truck['long'], cargo['origin_lat'], cargo['origin_lng'])
+                dist_list.append((key,key2,distance))
 
-        return {}   
+                if(final[key]['truck'] is None):
+                    final[key]['truck'] = truck['truck']
+                    final[key]['distance'] = distance
+                elif(distance < final[key]['distance']):
+                    final[key]['truck'] = truck['truck']
+                    final[key]['distance'] = distance
+            del final[key]['distance']
+        return final
+    
+    def calculateFitnessDist(self, dist_list):
+        return mlrose.TravellingSales(distances = dist_list)
+
+                
+               
+
 
 tsp = Tsp()
 
 trucks = tsp.getTrucks()
 cargos = tsp.getCargos()
-
-print cargos
+distance_list = tsp.distanceList(trucks, cargos)
+print(distance_list)
