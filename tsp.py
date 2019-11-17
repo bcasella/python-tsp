@@ -68,9 +68,7 @@ class Tsp:
         return cargos
         
     def calculateBestPairTrucksCargos(self, trucks, cargos):
-        return tsp.distanceList(trucks, cargos)
-    
-    def distanceList(self, trucks, cargos):
+        used_trucks = []
         dist_list = []
         final = {}
         for key, cargo in cargos.items():
@@ -82,10 +80,11 @@ class Tsp:
                 if(final[key]['truck'] is None):
                     final[key]['truck'] = truck['truck']
                     final[key]['distance'] = distance
-                elif(distance < final[key]['distance']):
+                elif(distance < final[key]['distance'] and (truck['truck'] not in used_trucks)):
                     final[key]['truck'] = truck['truck']
                     final[key]['distance'] = distance
             del final[key]['distance']
+            used_trucks.append(final[key]['truck'])
         return final
     
     def calculateFitnessDist(self, dist_list):
@@ -99,5 +98,5 @@ tsp = Tsp()
 
 trucks = tsp.getTrucks()
 cargos = tsp.getCargos()
-distance_list = tsp.distanceList(trucks, cargos)
+distance_list = tsp.calculateBestPairTrucksCargos(trucks, cargos)
 print(distance_list)
