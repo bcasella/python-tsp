@@ -1,0 +1,9 @@
+version: '3'
+services:
+  tsp:
+    container_name: tsp
+    image: python:3
+    volumes:
+    - ./:/usr/src/app
+    working_dir: /usr/src/app
+    command: bash -c "python setup.py install && tsp"

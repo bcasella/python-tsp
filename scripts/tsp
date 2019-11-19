@@ -1,0 +1,12 @@
+#!/usr/bin/python
+# coding: utf-8
+
+from tsp.Tsp import Tsp
+
+if __name__ == '__main__':
+
+    tsp = Tsp()
+    trucks = tsp.getTrucks()
+    cargos = tsp.getCargos()
+    distance_list = tsp.calculateBestPairTrucksCargos(trucks, cargos)
+    print(distance_list)

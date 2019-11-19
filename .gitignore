@@ -1,3 +1,6 @@
 .DS_store
 *.pyc
 *.pdf
+build/
+dist/
+tsp.egg-info/

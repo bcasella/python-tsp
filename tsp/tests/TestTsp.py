@@ -1,5 +1,5 @@
 import unittest
-from tsp import Tsp
+from Tsp import Tsp
 
 
 class TestTsp(unittest.TestCase):

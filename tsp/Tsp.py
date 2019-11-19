@@ -1,11 +1,10 @@
+import os
 import csv
-import mlrose
 import numpy as np
 from math import sin, cos, sqrt, atan2, radians
 
-
-_TRUCKS_FILE = 'trucks.csv'
-_CARGOS_FILE = 'cargo.csv'
+_TRUCKS_FILE = os.path.join(os.path.dirname(__file__), './trucks.csv')
+_CARGOS_FILE = os.path.join(os.path.dirname(__file__), './cargo.csv')
 
 
 class Tsp:
@@ -86,17 +85,3 @@ class Tsp:
             del final[key]['distance']
             used_trucks.append(final[key]['truck'])
         return final
-    
-    def calculateFitnessDist(self, dist_list):
-        return mlrose.TravellingSales(distances = dist_list)
-
-                
-               
-
-
-tsp = Tsp()
-
-trucks = tsp.getTrucks()
-cargos = tsp.getCargos()
-distance_list = tsp.calculateBestPairTrucksCargos(trucks, cargos)
-print(distance_list)
