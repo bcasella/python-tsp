@@ -3,13 +3,16 @@ import csv
 import numpy as np
 from math import sin, cos, sqrt, atan2, radians
 
-_TRUCKS_FILE = os.path.join(os.path.dirname(__file__), './trucks.csv')
-_CARGOS_FILE = os.path.join(os.path.dirname(__file__), './cargo.csv')
-
-
 class Tsp:
 
-    def calculateDistanceInKmFromLatsLongs(self, lat1, lon1, lat2, lon2):
+    __usedTrucks = []
+    TRUCKS_FILE = os.path.join(os.path.dirname(__file__), './trucks.csv')
+    CARGOS_FILE = os.path.join(os.path.dirname(__file__), './cargo.csv')
+    def __init__(self):
+        self.cargos = self.__getCargos()
+        self.trucks = self.__getTrucks()
+
+    def __calculateDistanceInKmFromLatsLongs(self, lat1, lon1, lat2, lon2):
         # approximate radius of earth in km
         R = 6356.0
 
@@ -23,9 +26,9 @@ class Tsp:
 
         return distance
 
-    def getTrucks(self):
+    def __getTrucks(self):
         trucks = {}
-        with open(_TRUCKS_FILE, mode='r') as trucks_csv:
+        with open(self.TRUCKS_FILE, mode='r') as trucks_csv:
 
             reader = csv.reader(trucks_csv)
             count = 0
@@ -44,9 +47,9 @@ class Tsp:
                 count+=1
         return trucks
 
-    def getCargos(self):
+    def __getCargos(self):
         cargos = {}
-        with open(_CARGOS_FILE, mode='r') as cargos_csv:
+        with open(self.CARGOS_FILE, mode='r') as cargos_csv:
 
             reader = csv.reader(cargos_csv)
             count = 0
@@ -66,22 +69,29 @@ class Tsp:
                 count+=1
         return cargos
         
-    def calculateBestPairTrucksCargos(self, trucks, cargos):
-        used_trucks = []
+    def getNearesTrucksCargosPairs(self):
         dist_list = []
         final = {}
-        for key, cargo in cargos.items():
+        for key, cargo in self.cargos.items():
             final[key] = {'truck': None, 'cargo': cargo['product'], 'distance': None}
-            for key2, truck in trucks.items():
-                distance = self.calculateDistanceInKmFromLatsLongs(truck['lat'], truck['long'], cargo['origin_lat'], cargo['origin_lng'])
+            for key2, truck in self.trucks.items():
+                distance = self.__calculateDistanceInKmFromLatsLongs(truck['lat'], truck['long'], cargo['origin_lat'], cargo['origin_lng'])
                 dist_list.append((key,key2,distance))
 
                 if(final[key]['truck'] is None):
                     final[key]['truck'] = truck['truck']
                     final[key]['distance'] = distance
-                elif(distance < final[key]['distance'] and (truck['truck'] not in used_trucks)):
+                elif(distance < final[key]['distance'] and (truck['truck'] not in self.__usedTrucks)):
                     final[key]['truck'] = truck['truck']
                     final[key]['distance'] = distance
             del final[key]['distance']
-            used_trucks.append(final[key]['truck'])
+            self.__usedTrucks.append(final[key]['truck'])
         return final
+    
+    
+    # com a funcao acima temos o ponto e caminhoes de inicio
+    # tenho que marcar os caminhoes ja usados
+    # tenho que criar uma lista com todos os pontos possiveis, incluindo destino de entrega
+    # a partir daí, é nearest neabors
+    # e com isso temos a solucao
+

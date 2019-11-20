@@ -6,7 +6,5 @@ from tsp.Tsp import Tsp
 if __name__ == '__main__':
 
     tsp = Tsp()
-    trucks = tsp.getTrucks()
-    cargos = tsp.getCargos()
-    distance_list = tsp.calculateBestPairTrucksCargos(trucks, cargos)
+    distance_list = tsp.getNearesTrucksCargosPairs()
     print(distance_list)
