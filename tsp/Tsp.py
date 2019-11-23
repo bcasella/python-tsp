@@ -2,7 +2,9 @@ import os
 import csv
 import numpy as np
 from math import sin, cos, sqrt, atan2, radians
-
+""""
+To run this program, use python version >3.0
+"""
 class Tsp:
 
     __usedTrucks = []
@@ -40,8 +42,8 @@ class Tsp:
                     truck['state'] = rows[2]
                     truck['lat'] = float(rows[3])
                     truck['long'] = float(rows[4])
-                    truck['nearest_cargo'] = None
-                    truck['nearest_dist'] = None
+                    truck['final_destination'] = False
+                    truck['used'] = False
                     trucks[count-1] = truck
                     
                 count+=1
@@ -68,30 +70,88 @@ class Tsp:
                     cargos[count-1] = cargo
                 count+=1
         return cargos
+
+    def __makeDestinations(self):
+        destinations = self.trucks
+        destination = {}
+        for key, cargo in self.cargos.items():
+            destination['truck'] = None
+            destination['city'] = None
+            destination['state'] = None
+            destination['lat'] = cargo['destination_lat']
+            destination['long'] = cargo['destination_lng']
+            destination['final_destination'] = True
+            destinations[len(destinations.keys())] = destination
+        return destinations
+
         
-    def getNearesTrucksCargosPairs(self):
+    def __getNearesTrucksCargosPairs(self):
         dist_list = []
         final = {}
         for key, cargo in self.cargos.items():
-            final[key] = {'truck': None, 'cargo': cargo['product'], 'distance': None}
+            final[key] = {
+                'truck': None,
+                'cargo': cargo['product'],
+                'distance': None,
+                'origin_lat' : cargo['origin_lat'],
+                'origin_lng' : cargo['origin_lng'],
+                'destination_lat' : cargo['destination_lat'],
+                'destination_lng' : cargo['destination_lng'],
+                }
             for key2, truck in self.trucks.items():
                 distance = self.__calculateDistanceInKmFromLatsLongs(truck['lat'], truck['long'], cargo['origin_lat'], cargo['origin_lng'])
                 dist_list.append((key,key2,distance))
 
                 if(final[key]['truck'] is None):
                     final[key]['truck'] = truck['truck']
+                    final[key]['truck_key'] = key2
                     final[key]['distance'] = distance
                 elif(distance < final[key]['distance'] and (truck['truck'] not in self.__usedTrucks)):
                     final[key]['truck'] = truck['truck']
+                    final[key]['truck_key'] = key2
                     final[key]['distance'] = distance
-            del final[key]['distance']
             self.__usedTrucks.append(final[key]['truck'])
+            self.trucks[final[key]['truck_key']]['used'] = True
+            del final[key]['truck_key']
         return final
-    
-    
-    # com a funcao acima temos o ponto e caminhoes de inicio
-    # tenho que marcar os caminhoes ja usados
-    # tenho que criar uma lista com todos os pontos possiveis, incluindo destino de entrega
-    # a partir daí, é nearest neabors
-    # e com isso temos a solucao
+
+    def __calculatePath(self, point):
+        currentLocation = {'lat': point['origin_lat'], 'long': point['origin_lng'], 'totalDist' : point['distance']}
+        path = {0:point}
+        count = 1
+        while((currentLocation['lat'] is not point['destination_lat']) and (currentLocation['long'] is not point['destination_lng'])):
+            minDist = float('inf')
+            tempPath = {'lat': None, 'long':None}
+            usedKey = None
+            for key, truck in self.trucks.items():
+                if not truck['used']:
+                    currentLocationToFinalDist = self.__calculateDistanceInKmFromLatsLongs(currentLocation['lat'], currentLocation['long'], point['destination_lat'], point['destination_lng'])
+                    currentLocationToTruckDist = self.__calculateDistanceInKmFromLatsLongs(currentLocation['lat'], currentLocation['long'], truck['lat'], truck['long'])
+                    truckToFinalDist = self.__calculateDistanceInKmFromLatsLongs(point['destination_lat'], point['destination_lng'], truck['lat'], truck['long'])
+                    totalDist = currentLocationToTruckDist + truckToFinalDist
+                    if (totalDist < minDist and currentLocationToTruckDist < currentLocationToFinalDist):
+                        tempPath['lat'] = truck['lat']
+                        tempPath['totalDist'] = currentLocation['totalDist']+currentLocationToTruckDist
+                        tempPath['long'] = truck['long']
+                        tempPath['deltaDist'] = currentLocationToTruckDist
+                        tempPath['truck'] = truck['truck']
+                        usedKey = key
+            if usedKey is None:
+                tempPath['lat'] = point['destination_lat']
+                tempPath['long'] = point['destination_lng']
+                tempPath['truck'] = currentLocation['truck']
+                tempPath['totalDist'] = currentLocation['totalDist']+currentLocationToFinalDist
+            else:            
+                self.trucks[usedKey]['used'] = True
+            path[count] = tempPath
+            currentLocation = tempPath
+            count = count+1
+        return path
+
+    def run(self):
+        initialList = self.__getNearesTrucksCargosPairs()
+        paths = {}
+        for key, point in initialList.items():
+            paths[key] = self.__calculatePath(point)
+        print(paths)
 
