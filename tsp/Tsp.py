@@ -5,11 +5,16 @@ from math import sin, cos, sqrt, atan2, radians
 """"
 To run this program, use python version >3.0
 """
+
+
 class Tsp:
 
     __usedTrucks = []
+    cargos = {}
+    trucks = {}
     TRUCKS_FILE = os.path.join(os.path.dirname(__file__), './trucks.csv')
     CARGOS_FILE = os.path.join(os.path.dirname(__file__), './cargo.csv')
+
     def __init__(self):
         self.cargos = self.__getCargos()
         self.trucks = self.__getTrucks()
@@ -35,7 +40,7 @@ class Tsp:
             reader = csv.reader(trucks_csv)
             count = 0
             for rows in reader:
-                if(count>0):         
+                if(count > 0):
                     truck = {}
                     truck['truck'] = rows[0]
                     truck['city'] = rows[1]
@@ -45,8 +50,8 @@ class Tsp:
                     truck['final_destination'] = False
                     truck['used'] = False
                     trucks[count-1] = truck
-                    
-                count+=1
+
+                count += 1
         return trucks
 
     def __getCargos(self):
@@ -56,7 +61,7 @@ class Tsp:
             reader = csv.reader(cargos_csv)
             count = 0
             for rows in reader:
-                if(count>0): 
+                if(count > 0):
                     cargo = {}
                     cargo['product'] = rows[0]
                     cargo['origin_city'] = rows[1]
@@ -68,7 +73,7 @@ class Tsp:
                     cargo['destination_lat'] = float(rows[7])
                     cargo['destination_lng'] = float(rows[8])
                     cargos[count-1] = cargo
-                count+=1
+                count += 1
         return cargos
 
     def __makeDestinations(self):
@@ -84,8 +89,7 @@ class Tsp:
             destinations[len(destinations.keys())] = destination
         return destinations
 
-        
-    def __getNearesTrucksCargosPairs(self):
+    def getNearesTrucksCargosPairs(self):
         dist_list = []
         final = {}
         for key, cargo in self.cargos.items():
@@ -93,14 +97,15 @@ class Tsp:
                 'truck': None,
                 'cargo': cargo['product'],
                 'distance': None,
-                'origin_lat' : cargo['origin_lat'],
-                'origin_lng' : cargo['origin_lng'],
-                'destination_lat' : cargo['destination_lat'],
-                'destination_lng' : cargo['destination_lng'],
-                }
+                'origin_lat': cargo['origin_lat'],
+                'origin_lng': cargo['origin_lng'],
+                'destination_lat': cargo['destination_lat'],
+                'destination_lng': cargo['destination_lng'],
+            }
             for key2, truck in self.trucks.items():
-                distance = self.__calculateDistanceInKmFromLatsLongs(truck['lat'], truck['long'], cargo['origin_lat'], cargo['origin_lng'])
-                dist_list.append((key,key2,distance))
+                distance = self.__calculateDistanceInKmFromLatsLongs(
+                    truck['lat'], truck['long'], cargo['origin_lat'], cargo['origin_lng'])
+                dist_list.append((key, key2, distance))
 
                 if(final[key]['truck'] is None):
                     final[key]['truck'] = truck['truck']
@@ -116,22 +121,27 @@ class Tsp:
         return final
 
     def __calculatePath(self, point):
-        currentLocation = {'lat': point['origin_lat'], 'long': point['origin_lng'], 'totalDist' : point['distance']}
-        path = {0:point}
+        currentLocation = {
+            'lat': point['origin_lat'], 'long': point['origin_lng'], 'totalDist': point['distance']}
+        path = {0: point}
         count = 1
         while((currentLocation['lat'] is not point['destination_lat']) and (currentLocation['long'] is not point['destination_lng'])):
             minDist = float('inf')
-            tempPath = {'lat': None, 'long':None}
+            tempPath = {'lat': None, 'long': None}
             usedKey = None
             for key, truck in self.trucks.items():
                 if not truck['used']:
-                    currentLocationToFinalDist = self.__calculateDistanceInKmFromLatsLongs(currentLocation['lat'], currentLocation['long'], point['destination_lat'], point['destination_lng'])
-                    currentLocationToTruckDist = self.__calculateDistanceInKmFromLatsLongs(currentLocation['lat'], currentLocation['long'], truck['lat'], truck['long'])
-                    truckToFinalDist = self.__calculateDistanceInKmFromLatsLongs(point['destination_lat'], point['destination_lng'], truck['lat'], truck['long'])
+                    currentLocationToFinalDist = self.__calculateDistanceInKmFromLatsLongs(
+                        currentLocation['lat'], currentLocation['long'], point['destination_lat'], point['destination_lng'])
+                    currentLocationToTruckDist = self.__calculateDistanceInKmFromLatsLongs(
+                        currentLocation['lat'], currentLocation['long'], truck['lat'], truck['long'])
+                    truckToFinalDist = self.__calculateDistanceInKmFromLatsLongs(
+                        point['destination_lat'], point['destination_lng'], truck['lat'], truck['long'])
                     totalDist = currentLocationToTruckDist + truckToFinalDist
                     if (totalDist < minDist and currentLocationToTruckDist < currentLocationToFinalDist):
                         tempPath['lat'] = truck['lat']
-                        tempPath['totalDist'] = currentLocation['totalDist']+currentLocationToTruckDist
+                        tempPath['totalDist'] = currentLocation['totalDist'] + \
+                            currentLocationToTruckDist
                         tempPath['long'] = truck['long']
                         tempPath['deltaDist'] = currentLocationToTruckDist
                         tempPath['truck'] = truck['truck']
@@ -140,8 +150,9 @@ class Tsp:
                 tempPath['lat'] = point['destination_lat']
                 tempPath['long'] = point['destination_lng']
                 tempPath['truck'] = currentLocation['truck']
-                tempPath['totalDist'] = currentLocation['totalDist']+currentLocationToFinalDist
-            else:            
+                tempPath['totalDist'] = currentLocation['totalDist'] + \
+                    currentLocationToFinalDist
+            else:
                 self.trucks[usedKey]['used'] = True
             path[count] = tempPath
             currentLocation = tempPath
@@ -149,9 +160,8 @@ class Tsp:
         return path
 
     def run(self):
-        initialList = self.__getNearesTrucksCargosPairs()
+        initialList = self.getNearesTrucksCargosPairs()
         paths = {}
         for key, point in initialList.items():
             paths[key] = self.__calculatePath(point)
         print(paths)
-

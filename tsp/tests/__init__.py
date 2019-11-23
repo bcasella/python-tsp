@@ -1,1 +1,2 @@
-from TestTsp import TestTsp
+#!/usr/bin/python
+# coding: utf-8
